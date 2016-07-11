@@ -484,29 +484,50 @@ private:
     ros::serialization::Serializer<rosserial_msgs::RequestParamRequest>::read(stream, req);
 
     if (ros::param::has(req.name.c_str())) {
-      ROS_INFO("[Param req] parameter %s exists", req.name.c_str());
+      ROS_INFO("Parameter %s requested.", req.name.c_str());
 
       rosserial_msgs::RequestParamResponse resp;
-
       XmlRpc::XmlRpcValue param_value;
       if (ros::param::get(req.name.c_str(), param_value)) {
-        switch (param_value.getType())
-        {
+        switch (param_value.getType()) {
           case XmlRpc::XmlRpcValue::TypeInt:
-            ROS_INFO("%s is type int: %d", req.name.c_str(), (int) param_value);
-            resp.ints.push_back((int32_t)param_value);
+            ROS_DEBUG("%s is type int: %d", req.name.c_str(), static_cast<int>(param_value));
+            resp.ints.push_back(static_cast<int32_t>(param_value));
             break;
           case XmlRpc::XmlRpcValue::TypeDouble:
-            ROS_INFO("%s is type float: %f", req.name.c_str(), (double) param_value);
-            resp.floats.push_back((float)((double)param_value));
+            ROS_DEBUG("%s is type float: %f", req.name.c_str(), static_cast<double>(param_value));
+            resp.floats.push_back(static_cast<float>(static_cast<double>(param_value)));
             break;
           case XmlRpc::XmlRpcValue::TypeString:
-            ROS_INFO("%s is type string: %s", req.name.c_str(), ((std::string)param_value).c_str());
-            resp.strings.push_back((std::string)param_value);
+            ROS_DEBUG("%s is type string: %s", req.name.c_str(), static_cast<std::string>(param_value).c_str());
+            resp.strings.push_back(static_cast<std::string>(param_value));
             break;
           case XmlRpc::XmlRpcValue::TypeArray:
-            ROS_INFO("%s is type array.", req.name.c_str());
-            // How can I get here? Arrays are not strings.
+            ROS_DEBUG("%s is type array.", req.name.c_str());
+            if (param_value.size() > 0) {
+              // Let's assume array type is the same as first element
+              XmlRpc::XmlRpcValue::Type array_type = param_value[0].getType();
+              for (int i = 0; i < param_value.size(); ++i) 
+              {
+                if (param_value[i].getType() != array_type) {
+                  ROS_WARN("Parameter of array mixed type not handled: %s", req.name.c_str());
+                  return;
+                }
+                switch (param_value[i].getType()) {
+                  case XmlRpc::XmlRpcValue::TypeInt:
+                    resp.ints.push_back(static_cast<int32_t>(param_value[i]));
+                    break;
+                  case XmlRpc::XmlRpcValue::TypeDouble:
+                    resp.floats.push_back(static_cast<float>(static_cast<double>(param_value[i])));
+                    break;
+                  case XmlRpc::XmlRpcValue::TypeString:
+                    resp.strings.push_back(static_cast<std::string>(param_value[i]));
+                    break;
+                }
+              }
+            } else {
+              ROS_WARN("Parameter array %s is empty.", req.name.c_str());
+            }
             break;
           default:
             ROS_WARN("Parameter type not handled: %s", req.name.c_str());
