@@ -541,7 +541,7 @@ private:
         std::vector<uint8_t> message(length);
         ros::serialization::OStream ostream(&message[0], length);
         ros::serialization::Serializer<rosserial_msgs::RequestParamResponse>::write(ostream, resp);
-        write_message(message, rosserial_msgs::TopicInfo::ID_PARAMETER_REQUEST, client_version);
+        write_message(message, rosserial_msgs::TopicInfo::ID_PARAMETER_REQUEST);
         set_sync_timeout(timeout_interval_);
       } else {
         ROS_WARN("Parameter %s does not exist", req.name.c_str());
