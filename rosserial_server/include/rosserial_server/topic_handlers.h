@@ -40,6 +40,7 @@
 #include <rosserial_msgs/RequestMessageInfo.h>
 #include <rosserial_msgs/RequestServiceInfo.h>
 #include <topic_tools/shape_shifter.h>
+#include <std_srvs/Empty.h>
 
 namespace rosserial_server
 {
@@ -192,33 +193,44 @@ private:
   uint16_t topic_id_;
 };
 
+
+bool req_callback(topic_tools::ShapeShifter::ConstPtr& req, topic_tools::ShapeShifter::ConstPtr& resp)
+//~ bool req_callback(std_srvs::Empty::Request& request, std_srvs::Empty::Response& response)
+{
+  ROS_INFO("req callback");
+  return true;
+}
+
 class ServiceServer {
 public:
   ServiceServer(ros::NodeHandle& nh, rosserial_msgs::TopicInfo& topic_info,
       boost::function<void(std::vector<uint8_t> buffer, const uint16_t topic_id)> write_fn)
     : write_fn_(write_fn) {
-    //~ topic_id_ = -1;
-    //~ if (!service_info_service_.isValid()) {
-      //~ // lazy-initialize the service caller.
-      //~ service_info_service_ = nh.serviceClient<rosserial_msgs::RequestServiceInfo>("service_info");
-      //~ if (!service_info_service_.waitForExistence(ros::Duration(5.0))) {
-        //~ ROS_WARN("Timed out waiting for service_info service to become available.");
-      //~ }
-    //~ }
-//~ 
-    //~ rosserial_msgs::RequestServiceInfo info;
-    //~ info.request.service = topic_info.message_type;
+    topic_id_ = -1;
+    if (!service_info_service_.isValid()) {
+      // lazy-initialize the service caller.
+      service_info_service_ = nh.serviceClient<rosserial_msgs::RequestServiceInfo>("service_info");
+      if (!service_info_service_.waitForExistence(ros::Duration(5.0))) {
+        ROS_WARN("Timed out waiting for service_info service to become available.");
+      }
+    }
+
+    rosserial_msgs::RequestServiceInfo info;
+    info.request.service = topic_info.message_type;
     //~ ROS_DEBUG("Calling service_info service for topic name %s",topic_info.topic_name.c_str());
-    //~ if (service_info_service_.call(info)) {
-      //~ request_message_md5_ = info.response.request_md5;
-      //~ response_message_md5_ = info.response.response_md5;
-    //~ } else {
-      //~ ROS_WARN("Failed to call service_info service. The service server will be created with blank md5sum.");
-    //~ }
+    ROS_INFO("Calling service_info service for topic name %s",topic_info.topic_name.c_str());
+    if (service_info_service_.call(info)) {
+      request_message_md5_ = info.response.request_md5;
+      response_message_md5_ = info.response.response_md5;
+    } else {
+      ROS_WARN("Failed to call service_info service. The service server will be created with blank md5sum.");
+    }
+    
     //~ ros::AdvertiseServiceOptions opts;
-    //~ opts.service = topic_info.topic_name;
-    //~ opts.md5sum = service_md5_ = info.response.service_md5;
+    //~ opts.init(topic_info.topic_name, req_callback);
+    //~ opts.md5sum = service_md5_ = info.request.service_md5;
     //~ service_server_ = nh.advertiseService(opts);
+    service_server_ = nh.advertiseService(topic_info.topic_name, req_callback);
   }
   void setTopicId(uint16_t topic_id) {
     topic_id_ = topic_id;
@@ -261,8 +273,9 @@ private:
 };
 
 ros::ServiceClient ServiceClient::service_info_service_;
+ros::ServiceClient ServiceServer::service_info_service_;
 typedef boost::shared_ptr<ServiceClient> ServiceClientPtr;
-typedef boost::shared_ptr<ServiceClient> ServiceServerPtr;
+typedef boost::shared_ptr<ServiceServer> ServiceServerPtr;
 
 }  // namespace
 
