@@ -7,10 +7,20 @@ namespace rosserial {
 #include <gtest/gtest.h>
 #include "rosserial_test/fixture.h"
 
+// Hardware tick must be emulated for getParam timeout
+void client_tick(const ros::TimerEvent&)
+{
+  rosserial::ClientComms::millis += 1;
+}
+
 /**
  * Get single int parameter by a rosserial client.
  */
 TEST_F(SingleClientFixture, int_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   client_nh.initNode();
   bool got_param = false;
   int int_param;
@@ -22,7 +32,7 @@ TEST_F(SingleClientFixture, int_param) {
   {
     client_nh.spinOnce();
     ros::spinOnce();
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
   got_param = client_nh.getParam("int", &client_int_param);
 
@@ -34,6 +44,10 @@ TEST_F(SingleClientFixture, int_param) {
  * Get single float parameter by a rosserial client.
  */
 TEST_F(SingleClientFixture, float_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   client_nh.initNode();
   bool got_param = false;
   float float_param;
@@ -45,7 +59,7 @@ TEST_F(SingleClientFixture, float_param) {
   {
     client_nh.spinOnce();
     ros::spinOnce();
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
   got_param = client_nh.getParam("float", &client_float_param);
 
@@ -57,6 +71,10 @@ TEST_F(SingleClientFixture, float_param) {
  * Get string parameter by a rosserial client.
  */
 TEST_F(SingleClientFixture, string_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   client_nh.initNode();
   bool got_param = false;
   std::string string_param;
@@ -69,7 +87,7 @@ TEST_F(SingleClientFixture, string_param) {
   {
     client_nh.spinOnce();
     ros::spinOnce();
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
   got_param = client_nh.getParam("string", client_string_list);
 
@@ -81,6 +99,10 @@ TEST_F(SingleClientFixture, string_param) {
  * Get int array parameter by a rosserial client.
  */
 TEST_F(SingleClientFixture, int_array_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   client_nh.initNode();
   bool got_param = false;
   std::vector<int> int_param;
@@ -92,7 +114,7 @@ TEST_F(SingleClientFixture, int_array_param) {
   {
     client_nh.spinOnce();
     ros::spinOnce();
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
   got_param = client_nh.getParam("int_array", client_int_param, 3);
 
@@ -108,6 +130,10 @@ TEST_F(SingleClientFixture, int_array_param) {
  * Get float array parameter by a rosserial client.
  */
 TEST_F(SingleClientFixture, float_array_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   client_nh.initNode();
   bool got_param = false;
   std::vector<float> float_param;
@@ -119,7 +145,7 @@ TEST_F(SingleClientFixture, float_array_param) {
   {
     client_nh.spinOnce();
     ros::spinOnce();
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
   got_param = client_nh.getParam("float_array", client_float_param, 3);
 
@@ -135,6 +161,10 @@ TEST_F(SingleClientFixture, float_array_param) {
  * Get string array parameter by a rosserial client.
  */
 TEST_F(SingleClientFixture, string_array_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   client_nh.initNode();
   bool got_param = false;
   std::vector<std::string> string_param;
@@ -149,7 +179,7 @@ TEST_F(SingleClientFixture, string_array_param) {
   {
     client_nh.spinOnce();
     ros::spinOnce();
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
   got_param = client_nh.getParam("string_array", client_string_list, 3);
 
@@ -162,35 +192,13 @@ TEST_F(SingleClientFixture, string_array_param) {
 }
 
 /**
- * Get mixed type array parameter by a rosserial client.
- */
-/*
- * Not timing out when asking for an invalid parameter
- *
-TEST_F(SingleClientFixture, mixed_array_param) {
-  client_nh.initNode();
-  bool got_param = true;
-  int client_int_array[3];
-
-  while (!client_nh.connected())
-  {
-    client_nh.spinOnce();
-    ros::spinOnce();
-    ros::Duration(0.1).sleep();
-  }
-  got_param = client_nh.getParam("mixed_array", client_int_array, 3);
-
-  EXPECT_FALSE(got_param);
-}
-*/
-
-/**
  * Get nonexistent parameter by a rosserial client.
  */
- /*
- * Not timing out when asking for nonexisten param
- *
 TEST_F(SingleClientFixture, nonexistent_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
   client_nh.initNode();
   bool got_param = true;
   int client_int_array;
@@ -199,13 +207,35 @@ TEST_F(SingleClientFixture, nonexistent_param) {
   {
     client_nh.spinOnce();
     ros::spinOnce();
-    ros::Duration(0.01).sleep();
+    ros::Duration(0.001).sleep();
   }
   got_param = client_nh.getParam("nonexisting", &client_int_array);
 
   EXPECT_FALSE(got_param);
 }
-*/
+
+/**
+ * Get mixed type array parameter by a rosserial client.
+ */
+TEST_F(SingleClientFixture, mixed_array_param) {
+  ros::Timer timer = nh.createTimer(ros::Duration(0.001), client_tick);
+  ros::AsyncSpinner spinner(1);
+  spinner.start();
+
+  client_nh.initNode();
+  bool got_param = true;
+  int client_int_array[3];
+
+  while (!client_nh.connected())
+  {
+    client_nh.spinOnce();
+    ros::spinOnce();
+    ros::Duration(0.001).sleep();
+  }
+  got_param = client_nh.getParam("mixed_array", client_int_array, 3);
+
+  EXPECT_FALSE(got_param);
+}
 
 
 int main(int argc, char **argv){
