@@ -1,0 +1,17 @@
+<launch>
+  <rosparam param="int">1</rosparam>
+  <rosparam param="float">0.05</rosparam>
+  <rosparam param="string">"hello"</rosparam>
+  <rosparam param="int_array">[1, 2, 3]</rosparam>
+  <rosparam param="float_array">[.05, .5, 5.]</rosparam>
+  <rosparam param="string_array">["hello", "world", "."]</rosparam>
+  <rosparam param="mixed_array">[1, "world", 3, 2]</rosparam>
+
+  <node pkg="rosserial_python" type="serial_node.py" name="rosserial_python_node" args="tcp 11412" />
+
+  <test test-name="rosserial_python_socket_test_getparam" pkg="rosserial_test"
+        type="rosserial_test_get_param" time-limit="20.0">
+    <param name="mode" value="socket" />
+    <param name="tcp_port" value="11412" />
+  </test>
+</launch>

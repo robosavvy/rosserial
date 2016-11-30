@@ -34,4 +34,9 @@ if(CATKIN_ENABLE_TESTING)
   add_rostest(test/rosserial_python_socket.test)
   # Disabled due to reconnect logic in rosserial_python not being robust enough.
   # add_rostest(test/rosserial_python_serial.test)
+
+  add_rosserial_test_executable(get_param)
+  add_rostest(test/rosserial_python_getparam.test)
+  # Waiting for rosserial_server getparam implementation
+  # add_rostest(test/rosserial_server_getparam.test)
 endif()
